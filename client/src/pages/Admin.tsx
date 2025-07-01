@@ -1,8 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +15,6 @@ const Admin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('admin_session_token');
@@ -28,14 +25,8 @@ const Admin = () => {
 
   const validateSession = async (token: string) => {
     try {
-      const { data } = await supabase
-        .from('admin_sessions')
-        .select('*')
-        .eq('session_token', token)
-        .gt('expires_at', new Date().toISOString())
-        .single();
-
-      if (data) {
+      const response = await fetch(`/api/admin-sessions/${token}`);
+      if (response.ok) {
         setIsAuthenticated(true);
         setSessionToken(token);
       } else {
@@ -66,24 +57,22 @@ const Admin = () => {
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24);
 
-      // Insert session with RLS bypass by using service role approach
-      const { error } = await supabase.rpc('create_admin_session', {
-        p_session_token: token,
-        p_username: username,
-        p_expires_at: expiresAt.toISOString()
+      const response = await fetch('/api/admin-sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          password,
+          session_token: token,
+          expires_at: expiresAt.toISOString()
+        }),
       });
 
-      if (error) {
-        // Fallback: try direct insert (this should work with updated RLS)
-        const { error: insertError } = await supabase
-          .from('admin_sessions')
-          .insert([{
-            session_token: token,
-            username: username,
-            expires_at: expiresAt.toISOString()
-          }]);
-
-        if (insertError) throw insertError;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Login failed');
       }
 
       localStorage.setItem('admin_session_token', token);
@@ -109,10 +98,9 @@ const Admin = () => {
   const handleLogout = async () => {
     try {
       if (sessionToken) {
-        await supabase
-          .from('admin_sessions')
-          .delete()
-          .eq('session_token', sessionToken);
+        await fetch(`/api/admin-sessions/${sessionToken}`, {
+          method: 'DELETE',
+        });
       }
       
       localStorage.removeItem('admin_session_token');
@@ -181,13 +169,12 @@ const Admin = () => {
             </form>
             
             <div className="mt-8 text-center">
-              <Button
-                variant="ghost"
-                onClick={() => navigate('/')}
-                className="text-gray-600 hover:text-black"
+              <a
+                href="/"
+                className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-black transition-colors"
               >
                 ← Back to Home
-              </Button>
+              </a>
             </div>
           </CardContent>
         </Card>

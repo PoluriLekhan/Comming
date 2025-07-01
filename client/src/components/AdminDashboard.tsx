@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -29,12 +28,11 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
   const fetchSubscribers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('subscribers')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const response = await fetch('/api/subscribers');
+      if (!response.ok) {
+        throw new Error('Failed to fetch subscribers');
+      }
+      const data = await response.json();
       setSubscribers(data || []);
     } catch (error) {
       console.error('Error fetching subscribers:', error);
@@ -50,12 +48,13 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
   const deleteSubscriber = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('subscribers')
-        .delete()
-        .eq('id', id);
+      const response = await fetch(`/api/subscribers/${id}`, {
+        method: 'DELETE',
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Failed to delete subscriber');
+      }
 
       setSubscribers(subscribers.filter(sub => sub.id !== id));
       toast({

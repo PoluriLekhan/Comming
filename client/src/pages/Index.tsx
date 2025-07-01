@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, CheckCircle, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -20,10 +19,11 @@ const Index = () => {
 
   const fetchSubscriberCount = async () => {
     try {
-      const { count } = await supabase
-        .from('subscribers')
-        .select('*', { count: 'exact', head: true });
-      setSubscriberCount(count || 0);
+      const response = await fetch('/api/subscribers/count');
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriberCount(data.count || 0);
+      }
     } catch (error) {
       console.log('Could not fetch subscriber count');
     }
@@ -58,20 +58,25 @@ const Index = () => {
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase
-        .from('subscribers')
-        .insert([{ email: email.toLowerCase() }])
-        .select();
+      const response = await fetch('/api/subscribers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email.toLowerCase() }),
+      });
 
-      if (error) {
-        if (error.code === '23505') {
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.code === '23505') {
           toast({
             title: "Already Subscribed",
             description: "This email is already registered for updates",
             variant: "destructive",
           });
         } else {
-          throw error;
+          throw new Error(data.error || 'Subscription failed');
         }
       } else {
         setIsSuccess(true);
