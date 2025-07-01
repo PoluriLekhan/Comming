@@ -59,7 +59,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_admin_session: {
+        Args: {
+          p_session_token: string
+          p_username: string
+          p_expires_at: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
