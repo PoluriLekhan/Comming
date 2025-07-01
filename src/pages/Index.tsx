@@ -1,18 +1,33 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Mail, CheckCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import ParticleBackground from '@/components/ParticleBackground';
 
 const Index = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [subscriberCount, setSubscriberCount] = useState(0);
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchSubscriberCount();
+  }, []);
+
+  const fetchSubscriberCount = async () => {
+    try {
+      const { count } = await supabase
+        .from('subscribers')
+        .select('*', { count: 'exact', head: true });
+      setSubscriberCount(count || 0);
+    } catch (error) {
+      console.log('Could not fetch subscriber count');
+    }
+  };
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -49,7 +64,7 @@ const Index = () => {
         .select();
 
       if (error) {
-        if (error.code === '23505') { // Unique constraint violation
+        if (error.code === '23505') {
           toast({
             title: "Already Subscribed",
             description: "This email is already registered for updates",
@@ -61,6 +76,7 @@ const Index = () => {
       } else {
         setIsSuccess(true);
         setEmail('');
+        fetchSubscriberCount();
         toast({
           title: "Successfully Subscribed!",
           description: "We'll notify you when we launch",
@@ -79,42 +95,41 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center relative overflow-hidden">
-      <ParticleBackground />
-      
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 animate-pulse" />
-      
-      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="max-w-2xl mx-auto text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mb-8"
+          className="mb-12"
         >
-          <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent mb-6">
-            Coming Soon
+          <h1 className="text-6xl md:text-8xl font-bold text-black mb-8 tracking-tight">
+            COMING
+            <br />
+            SOON
           </h1>
-          <motion.p
+          
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto"
+            className="space-y-4 mb-12"
           >
-            We are working hard to launch our website. Stay tuned!
-          </motion.p>
+            <p className="text-xl text-gray-600">
+              Something extraordinary is on the horizon.
+            </p>
+            <p className="text-lg text-black font-medium">
+              Be the first to experience the future.
+            </p>
+          </motion.div>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-2xl max-w-md mx-auto"
+          className="max-w-md mx-auto mb-8"
         >
-          <div className="flex items-center justify-center mb-6">
-            <Mail className="h-8 w-8 text-purple-400 mr-3" />
-            <h2 className="text-2xl font-semibold text-white">Get Notified</h2>
-          </div>
-          
           <form onSubmit={handleSubscribe} className="space-y-4">
             <div className="relative">
               <Input
@@ -122,7 +137,7 @@ const Index = () => {
                 placeholder="Enter your email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-white/20 border-white/30 text-white placeholder-gray-300 focus:border-purple-400 focus:ring-purple-400/20 transition-all duration-300"
+                className="h-14 px-6 text-center border-2 border-gray-200 rounded-full focus:border-black focus:ring-0 text-lg placeholder:text-gray-400"
                 disabled={isSubmitting}
               />
             </div>
@@ -130,16 +145,16 @@ const Index = () => {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium py-3 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full h-14 bg-black hover:bg-gray-800 text-white font-medium text-lg rounded-full transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                   Subscribing...
                 </>
               ) : isSuccess ? (
                 <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CheckCircle className="h-5 w-5 mr-2" />
                   Subscribed!
                 </>
               ) : (
@@ -148,22 +163,32 @@ const Index = () => {
             </Button>
           </form>
           
-          <p className="text-gray-400 text-sm mt-4">
-            We'll never spam you. Unsubscribe at any time.
-          </p>
+          {subscriberCount > 0 && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-gray-500 text-sm mt-6"
+            >
+              Join {subscriberCount}+ others waiting for launch
+            </motion.p>
+          )}
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          className="mt-12"
+          transition={{ duration: 0.8, delay: 0.8 }}
+          className="text-center space-y-4"
         >
+          <p className="text-gray-400 text-sm">
+            © 2025. All rights reserved.
+          </p>
           <a
             href="/admin"
-            className="text-gray-500 hover:text-gray-300 text-sm transition-colors duration-300"
+            className="text-gray-400 hover:text-gray-600 text-sm transition-colors duration-300 block"
           >
-            Admin Login
+            Admin
           </a>
         </motion.div>
       </div>

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Lock, LogOut, Download, Trash2, Users, Mail } from 'lucide-react';
+import { Lock, LogOut } from 'lucide-react';
 import AdminDashboard from '@/components/AdminDashboard';
 
 const Admin = () => {
@@ -20,7 +20,6 @@ const Admin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for existing session
     const token = localStorage.getItem('admin_session_token');
     if (token) {
       validateSession(token);
@@ -65,17 +64,27 @@ const Admin = () => {
       // Create session token
       const token = crypto.randomUUID();
       const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24); // 24 hour session
+      expiresAt.setHours(expiresAt.getHours() + 24);
 
-      const { error } = await supabase
-        .from('admin_sessions')
-        .insert([{
-          session_token: token,
-          username: username,
-          expires_at: expiresAt.toISOString()
-        }]);
+      // Insert session with RLS bypass by using service role approach
+      const { error } = await supabase.rpc('create_admin_session', {
+        p_session_token: token,
+        p_username: username,
+        p_expires_at: expiresAt.toISOString()
+      });
 
-      if (error) throw error;
+      if (error) {
+        // Fallback: try direct insert (this should work with updated RLS)
+        const { error: insertError } = await supabase
+          .from('admin_sessions')
+          .insert([{
+            session_token: token,
+            username: username,
+            expires_at: expiresAt.toISOString()
+          }]);
+
+        if (insertError) throw insertError;
+      }
 
       localStorage.setItem('admin_session_token', token);
       setSessionToken(token);
@@ -126,31 +135,29 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 animate-pulse" />
-      
+    <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-10"
+        className="w-full max-w-md"
       >
-        <Card className="w-full max-w-md bg-white/10 backdrop-blur-lg border-white/20">
-          <CardHeader className="text-center">
+        <Card className="border-2 border-gray-200 shadow-lg">
+          <CardHeader className="text-center pb-8">
             <div className="flex items-center justify-center mb-4">
-              <Lock className="h-8 w-8 text-purple-400 mr-2" />
-              <CardTitle className="text-2xl text-white">Admin Login</CardTitle>
+              <Lock className="h-8 w-8 text-black mr-2" />
+              <CardTitle className="text-2xl text-black">Admin Login</CardTitle>
             </div>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+          <CardContent className="px-8 pb-8">
+            <form onSubmit={handleLogin} className="space-y-6">
               <div>
                 <Input
                   type="text"
                   placeholder="Username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="bg-white/20 border-white/30 text-white placeholder-gray-300 focus:border-purple-400 focus:ring-purple-400/20"
+                  className="h-12 px-4 border-2 border-gray-200 rounded-lg focus:border-black focus:ring-0"
                   required
                 />
               </div>
@@ -160,24 +167,24 @@ const Admin = () => {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-white/20 border-white/30 text-white placeholder-gray-300 focus:border-purple-400 focus:ring-purple-400/20"
+                  className="h-12 px-4 border-2 border-gray-200 rounded-lg focus:border-black focus:ring-0"
                   required
                 />
               </div>
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium py-3 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full h-12 bg-black hover:bg-gray-800 text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {isLoading ? 'Logging in...' : 'Login'}
               </Button>
             </form>
             
-            <div className="mt-6 text-center">
+            <div className="mt-8 text-center">
               <Button
                 variant="ghost"
                 onClick={() => navigate('/')}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-600 hover:text-black"
               >
                 ← Back to Home
               </Button>

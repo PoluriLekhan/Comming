@@ -113,7 +113,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -122,13 +122,13 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
           transition={{ duration: 0.6 }}
           className="flex justify-between items-center mb-8"
         >
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-black">
             Admin Dashboard
           </h1>
           <Button
             onClick={onLogout}
             variant="outline"
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            className="border-2 border-gray-300 text-black hover:bg-gray-100"
           >
             <LogOut className="h-4 w-4 mr-2" />
             Logout
@@ -142,45 +142,45 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
         >
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20">
+          <Card className="border-2 border-gray-200">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <Users className="h-8 w-8 text-purple-400 mr-3" />
+                <Users className="h-8 w-8 text-black mr-3" />
                 <div>
-                  <p className="text-2xl font-bold text-white">{subscribers.length}</p>
-                  <p className="text-gray-300">Total Subscribers</p>
+                  <p className="text-3xl font-bold text-black">{subscribers.length}</p>
+                  <p className="text-gray-600">Total Subscribers</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20">
+          <Card className="border-2 border-gray-200">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <Mail className="h-8 w-8 text-pink-400 mr-3" />
+                <Mail className="h-8 w-8 text-black mr-3" />
                 <div>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-3xl font-bold text-black">
                     {subscribers.filter(sub => 
                       new Date(sub.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                     ).length}
                   </p>
-                  <p className="text-gray-300">This Week</p>
+                  <p className="text-gray-600">This Week</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20">
+          <Card className="border-2 border-gray-200">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <Calendar className="h-8 w-8 text-blue-400 mr-3" />
+                <Calendar className="h-8 w-8 text-black mr-3" />
                 <div>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-3xl font-bold text-black">
                     {subscribers.filter(sub => 
                       new Date(sub.created_at).toDateString() === new Date().toDateString()
                     ).length}
                   </p>
-                  <p className="text-gray-300">Today</p>
+                  <p className="text-gray-600">Today</p>
                 </div>
               </div>
             </CardContent>
@@ -196,14 +196,14 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         >
           <Button
             onClick={exportToCSV}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-black hover:bg-gray-800 text-white"
           >
             <Download className="h-4 w-4 mr-2" />
             Export CSV
           </Button>
           <Button
             onClick={exportToJSON}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-black hover:bg-gray-800 text-white"
           >
             <Download className="h-4 w-4 mr-2" />
             Export JSON
@@ -216,29 +216,29 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <Card className="bg-white/10 backdrop-blur-lg border-white/20">
+          <Card className="border-2 border-gray-200">
             <CardHeader>
-              <CardTitle className="text-white">Subscribers List</CardTitle>
+              <CardTitle className="text-black">Subscribers List</CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto"></div>
-                  <p className="text-gray-300 mt-2">Loading subscribers...</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto"></div>
+                  <p className="text-gray-600 mt-2">Loading subscribers...</p>
                 </div>
               ) : subscribers.length === 0 ? (
                 <div className="text-center py-8">
                   <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-300">No subscribers yet</p>
+                  <p className="text-gray-600">No subscribers yet</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-white/20">
-                        <th className="text-left py-3 px-4 text-gray-300">Email</th>
-                        <th className="text-left py-3 px-4 text-gray-300">Subscription Date</th>
-                        <th className="text-left py-3 px-4 text-gray-300">Actions</th>
+                      <tr className="border-b-2 border-gray-200">
+                        <th className="text-left py-4 px-4 text-black font-semibold">Email</th>
+                        <th className="text-left py-4 px-4 text-black font-semibold">Subscription Date</th>
+                        <th className="text-left py-4 px-4 text-black font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -247,13 +247,13 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                           key={subscriber.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="border-b border-white/10 hover:bg-white/5 transition-colors"
+                          className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                         >
-                          <td className="py-3 px-4 text-white">{subscriber.email}</td>
-                          <td className="py-3 px-4 text-gray-300">
+                          <td className="py-4 px-4 text-black">{subscriber.email}</td>
+                          <td className="py-4 px-4 text-gray-600">
                             {new Date(subscriber.subscribed_at).toLocaleDateString()}
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-4 px-4">
                             <Button
                               onClick={() => deleteSubscriber(subscriber.id)}
                               variant="destructive"
